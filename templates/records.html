@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-3">Stored Records</h3>
+
+<table class="table table-bordered table-sm bg-white">
+  <thead class="table-light">
+    <tr>
+      <th>ID</th>
+      <th>Type</th>
+      <th>Name / Employee / Borrower</th>
+      <th>Key ID (DL / Passport / EIN / Customer No)</th>
+      <th>Net Pay</th>
+      <th>Created At</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in rows %}
+    <tr>
+      <td>{{ r["id"] }}</td>
+      <td>{{ r["doc_type"] }}</td>
+      <td>{{ r["name"] or r["employee_name"] or r["borrower_name"] }}</td>
+      <td>{{ r["dl_number"] or r["passport_number"] or r["ein"] or r["customer_no"] }}</td>
+      <td>{{ r["net_pay"] or "-" }}</td>
+      <td>{{ r["created_at"] }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% if not rows %}
+<p class="text-muted">No records yet. Upload a document first.</p>
+{% endif %}
+{% endblock %}
