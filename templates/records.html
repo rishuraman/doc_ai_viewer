@@ -1,32 +1,48 @@
 {% extends "base.html" %}
-{% block content %}
-<h3 class="mb-3">Stored Records</h3>
 
-<table class="table table-bordered table-sm bg-white">
-  <thead class="table-light">
-    <tr>
-      <th>ID</th>
-      <th>Type</th>
-      <th>Name / Employee / Borrower</th>
-      <th>Key ID (DL / Passport / EIN / Customer No)</th>
-      <th>Net Pay</th>
-      <th>Created At</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for r in rows %}
-    <tr>
-      <td>{{ r["id"] }}</td>
-      <td>{{ r["doc_type"] }}</td>
-      <td>{{ r["name"] or r["employee_name"] or r["borrower_name"] }}</td>
-      <td>{{ r["dl_number"] or r["passport_number"] or r["ein"] or r["customer_no"] }}</td>
-      <td>{{ r["net_pay"] or "-" }}</td>
-      <td>{{ r["created_at"] }}</td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-{% if not rows %}
-<p class="text-muted">No records yet. Upload a document first.</p>
-{% endif %}
+{% block content %}
+<section class="card card-records">
+    <div class="card-header">
+        <h2>Stored Documents</h2>
+        <span class="pill pill-soft">
+            {{ rows|length }} record{{ rows|length != 1 and 's' or '' }}
+        </span>
+    </div>
+
+    {% if rows %}
+        <div class="table-wrapper">
+            <table class="field-table records-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Name / Employee</th>
+                        <th>Key ID</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+                        <td>#{{ row['id'] }}</td>
+                        <td><span class="tag">{{ row['doc_type'] }}</span></td>
+                        <td>
+                            {{ row['name'] or row['employee_name'] or row['borrower_name'] or '—' }}
+                        </td>
+                        <td>
+                            {{ row['dl_number'] or row['passport_number'] or row['customer_no'] or row['ein'] or '—' }}
+                        </td>
+                        <td>{{ row['created_at'] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="empty-state big">
+            <p>No records yet.</p>
+            <p>Upload some documents first to populate your history.</p>
+        </div>
+    {% endif %}
+</section>
 {% endblock %}
