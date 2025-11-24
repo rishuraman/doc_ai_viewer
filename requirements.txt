@@ -1,5 +1,5 @@
 flask
-pillow
-
+PyPDF2
 sqlalchemy
 gunicorn
+
