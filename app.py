@@ -5,18 +5,30 @@ from extractor.reader import read_document
 from extractor.classifier import classify_document
 from extractor.fields import extract_fields
 
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
-DB_PATH = os.path.join(BASE_DIR, "instance", "doc_ai.db")
+# Detect if running on Vercel
+IS_VERCEL = os.environ.get("VERCEL") is not None
 
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+
+if IS_VERCEL:
+    # Vercel: use /tmp (only writable directory)
+    UPLOAD_FOLDER = "/tmp/uploads"
+    DB_DIR = "/tmp/instance"
+    DB_PATH = os.path.join(DB_DIR, "doc_ai.db")
+else:
+    # Local dev: original paths
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+    DB_DIR = os.path.join(BASE_DIR, "instance")
+    DB_PATH = os.path.join(DB_DIR, "doc_ai.db")
+
+# Create necessary folders
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+os.makedirs(DB_DIR, exist_ok=True)
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
-
 
 
 # ---------- DB helpers ----------
@@ -96,6 +108,18 @@ def save_to_db(doc_type, fields, raw_text):
     conn.close()
 
 
+# ---------- Ensure DB is initialized (Flask 3.x safe) ----------
+db_initialized = False
+
+
+@app.before_request
+def setup_db():
+    global db_initialized
+    if not db_initialized:
+        init_db()
+        db_initialized = True
+
+
 # ---------- Routes ----------
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -116,7 +140,7 @@ def index():
         if ext not in ALLOWED_EXTENSIONS:
             return render_template(
                 "index.html",
-                error=f"Unsupported file type: {ext}. Please upload a PDF.",
+                error=f"Unsupported file type: {ext}. Please upload a PDF or image.",
                 doc_type=None,
                 fields=None,
                 text=None,
@@ -199,9 +223,7 @@ def records():
     return render_template("records.html", rows=rows)
 
 
-import os
-
 if __name__ == "__main__":
-    init_db()
+    # Local dev server
     port = int(os.environ.get("PORT", 5000))
-    app.run(debug=False, host="0.0.0.0", port=port)
+    app.run(debug=True, host="0.0.0.0", port=port)
